@@ -1,0 +1,32 @@
+-- удаление функций
+DROP FUNCTION fnc_person_visits_and_eats_on_date(VARCHAR, NUMERIC, DATE);
+
+-- создание таблицы
+CREATE FUNCTION fnc_person_visits_and_eats_on_date( pperson VARCHAR DEFAULT 'Dmitriy', pprice NUMERIC DEFAULT 500, pdate DATE DEFAULT '2022-01-08')
+RETURNS TABLE 
+    (
+        pizzeria_name VARCHAR
+    ) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT pizzeria.name AS pizzeria_name
+    FROM person_visits
+    JOIN person ON person.id = person_visits.person_id
+    JOIN menu ON menu.pizzeria_id = person_visits.pizzeria_id
+    JOIN pizzeria ON pizzeria.id = menu.pizzeria_id
+    WHERE person.name = pperson
+        AND person_visits.visit_date = pdate
+        AND menu.price < pprice;
+END;
+$$ LANGUAGE plpgsql;
+
+-- проверка значений
+SELECT *  
+FROM fnc_person_visits_and_eats_on_date(pprice := 800);
+
+SELECT *  
+FROM fnc_person_visits_and_eats_on_date(
+    pperson := 'Anna',
+    pprice := 1300,
+    pdate := '2022-01-01'
+);
